@@ -1,0 +1,102 @@
+//FALTA EL PIN DEL BUZZER Y DEL COOLER, Y LO DE TEMP
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+
+#define PIN_HUMEDAD 34
+#define PIN_LDR 35
+#define BTN_ABAJO 33
+#define BTN_ATRAS 32
+#define BTN_ARRIBA 25
+#define BTN_ADELANTE 26
+#define BTN_ACEPTAR 27
+#define LED_VERDE 13
+#define LED_AMARILLO 12
+#define LED_ROJO 14
+
+#define presionado 0
+#define no_presionado 1
+
+float valorHumedad;
+int valorLDR;
+int estadoBtnArriba, estadoBtnAtras, estadoBtnAdelante, estadoBtnAceptar, estadoBtnAbajo;
+
+void setup() {
+  Serial.begin(9600);
+
+  lcd.init();
+  lcd.backlight();
+
+  pinMode(PIN_HUMEDAD, INPUT);
+  pinMode(PIN_LDR, INPUT);
+  pinMode(BTN_ABAJO, INPUT);
+  pinMode(BTN_ATRAS, INPUT_PULLUP);
+  pinMode(BTN_ARRIBA, INPUT_PULLUP);
+  pinMode(BTN_ADELANTE, INPUT_PULLUP);
+  pinMode(BTN_ACEPTAR, INPUT_PULLUP);
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+}
+
+void loop() {
+  valorHumedad = map(analogRead(PIN_HUMEDAD), 0, 4096, 100, 0);
+  valorLDR = analogRead(PIN_LDR);
+
+    /*Serial.print("Humedad: ");
+  Serial.print(valorHumedad);
+  Serial.println("%");*/
+
+    if (valorHumedad > 50) {
+    digitalWrite(LED_ROJO, HIGH);
+    digitalWrite(LED_AMARILLO, HIGH);
+    digitalWrite(LED_VERDE, HIGH);
+  }
+  else {
+    digitalWrite(LED_ROJO, LOW);
+    digitalWrite(LED_AMARILLO, LOW);
+    digitalWrite(LED_VERDE, LOW);
+  }
+
+  estadoBtnAbajo = digitalRead(BTN_ABAJO);
+  estadoBtnAtras = digitalRead(BTN_ATRAS);
+  estadoBtnArriba = digitalRead(BTN_ARRIBA);
+  estadoBtnAdelante = digitalRead(BTN_ADELANTE);
+  estadoBtnAceptar = digitalRead(BTN_ACEPTAR);
+
+  if (estadoBtnAbajo == no_presionado) {
+    lcd.setCursor(0, 0);
+    lcd.print("Abajo   ");
+    lcd.clear();
+  } else if (estadoBtnAtras == presionado) {
+    lcd.setCursor(0, 0);
+    lcd.print("Atras   ");
+    lcd.clear();
+  } else if (estadoBtnArriba == presionado) {
+    lcd.setCursor(0, 0);
+    lcd.print("Arriba   ");
+    lcd.clear();
+  } else if (estadoBtnAdelante == presionado) {
+    lcd.setCursor(0, 0);
+    lcd.print("Adelante   ");
+    lcd.clear();
+  } else if (estadoBtnAceptar == presionado) {
+    lcd.setCursor(0, 0);
+    lcd.print("Aceptar   ");
+    lcd.clear();
+
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Humedad: ");
+    lcd.setCursor(10, 0);
+    lcd.print(valorHumedad);
+    lcd.setCursor(15, 0);
+    lcd.print("%   ");
+    lcd.setCursor(0, 1);
+    lcd.print("Luz: ");
+    lcd.setCursor(4,1);
+    lcd.print(valorLDR);
+    lcd.clear();
+  }
+}
