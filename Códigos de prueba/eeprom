@@ -1,0 +1,20 @@
+// include library to read and write from flash memory
+#include <EEPROM.h>
+
+// define the number of bytes you want to access
+#define EEPROM_SIZE 2
+
+int umbral
+
+void setup() { 
+  Serial.begin(115200);
+  EEPROM.begin(EEPROM_SIZE); // initialize EEPROM with predefined size
+  umbral = EEPROM.read(0); // read the last LED state from flash memory
+}
+
+void loop() {
+    EEPROM.write(0, umbral); // save in flash memory
+    EEPROM.commit();
+    Serial.println("State saved in flash memory");
+  }
+}
