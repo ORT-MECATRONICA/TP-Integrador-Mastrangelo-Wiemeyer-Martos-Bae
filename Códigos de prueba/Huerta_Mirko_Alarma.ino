@@ -1,0 +1,152 @@
+/***SENSOR TEMPERATURA***/
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_BMP280.h>
+
+Adafruit_BMP280 bmp; // use I2C interface
+Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
+Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
+
+/***TELEGRAM***/
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h> 
+#include <ArduinoJson.h>
+
+const char* ssid = "ORT-IoT";
+const char* password = "OrtIOTnew22$2";
+
+#define BOTtoken "6011340543:AAHn3L9_PeL9hfO5barxWzuc3tqZZbR3AhU" 
+#define CHAT_ID "-807022472" 
+
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+
+/***PINES***/
+#define BTN_OK 33
+#define LED_VERDE 13
+#define LED_AMARILLO 12
+#define LED_ROJO 14
+#define BUZZER 17
+int estado;
+
+/***MAQUINA DE ESTADOS***/
+#define VERDE 0
+#define AMARILLO 1
+#define ROJO 2
+#define ROJO_SIN_BUZZER 3
+
+/****VARIABLES***/
+int estadoBtnOk;
+int umbral = 26;
+int temperatura;
+
+#define presionado 1
+#define no_presionado 0
+
+void setup() {
+  //FALTAN LOS PINMODE DE TODO
+  pinMode(BTN_OK, INPUT_PULLUP);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  
+  Serial.begin(9600);
+  while ( !Serial ) delay(100);   // wait for native usb
+  Serial.println(F("BMP280 Sensor event test"));
+
+  unsigned status;
+  status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
+  //status = bmp.begin();
+  if (!status) {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
+                     "try a different address!"));
+    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(), 16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    while (1) delay(10);
+  }
+
+  /* Default settings from datasheet. */
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+
+  bmp_temp->printSensorDetails();
+
+  // Connect to Wi-Fi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
+
+  ///bloquea el programa si no se puede conectar a internet 
+  while (WiFi.status() != WL_CONNECTED) {   
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+  // Print ESP32 Local IP Address
+  Serial.println(WiFi.localIP());
+  bot.sendMessage(CHAT_ID, "Bot Hola mundo", "");
+}
+
+void loop() {
+  sensors_event_t temp_event;
+  bmp_temp->getEvent(&temp_event);
+  temperatura = temp_event.temperature;
+  Serial.println(temperatura);
+  estadoBtnOk = digitalRead(BTN_OK);
+
+  switch (estado) {
+    case VERDE:
+      digitalWrite(LED_VERDE, HIGH);
+      digitalWrite(LED_AMARILLO, LOW);
+      digitalWrite(LED_ROJO, LOW);
+      digitalWrite(BUZZER, LOW);
+      if (temperatura >= umbral) {
+        estado = ROJO;
+      }
+      break;
+
+    case AMARILLO:
+      digitalWrite(LED_VERDE, LOW);
+      digitalWrite(LED_AMARILLO, HIGH);
+      digitalWrite(LED_ROJO, LOW);
+      digitalWrite(BUZZER, LOW);
+      if (estadoBtnOk == presionado) {
+        estado = VERDE;
+      }
+      if (temperatura >= umbral) {
+        estado = ROJO;
+      }
+      break;
+
+    case ROJO:
+      digitalWrite(LED_VERDE, LOW);
+      digitalWrite(LED_AMARILLO, LOW);
+      digitalWrite(LED_ROJO, HIGH);
+      digitalWrite(BUZZER, HIGH);
+      bot.sendMessage(CHAT_ID, "La temperatura ha superado el umbral establecido", "");
+      if (estadoBtnOk == presionado) {
+        estado = ROJO_SIN_BUZZER;
+      }
+      if (temperatura < umbral) {
+        estado = AMARILLO;
+      }
+      break;
+
+    case ROJO_SIN_BUZZER:
+      digitalWrite(LED_VERDE, LOW);
+      digitalWrite(LED_AMARILLO, LOW);
+      digitalWrite(LED_ROJO, HIGH);
+      digitalWrite(BUZZER, LOW);
+      if (temperatura < umbral) {
+        estado = AMARILLO;
+      }
+      break;
+  }
+}
