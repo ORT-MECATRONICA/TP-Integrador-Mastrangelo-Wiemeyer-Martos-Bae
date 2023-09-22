@@ -6,15 +6,15 @@
 
 int umbral;
 
-void setup() { 
+void setup() {
   Serial.begin(115200);
   EEPROM.begin(EEPROM_SIZE); // initialize EEPROM with predefined size
   umbral = EEPROM.read(0); // read the last LED state from flash memory
 }
 
 void loop() {
-    EEPROM.write(0, umbral); // save in flash memory
-    EEPROM.commit();
-    Serial.println("State saved in flash memory");
-  }
+  EEPROM.write(0, umbral); // save in flash memory
+  EEPROM.commit();
+  Serial.println("State saved in flash memory");
 }
+
