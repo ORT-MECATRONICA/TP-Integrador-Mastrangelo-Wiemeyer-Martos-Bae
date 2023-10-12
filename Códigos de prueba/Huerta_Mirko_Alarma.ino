@@ -3,12 +3,12 @@
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
 
-Adafruit_BMP280 bmp; // use I2C interface
+Adafruit_BMP280 bmp;  // use I2C interface
 Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
 Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
 
 /***TELEGRAM***/
-#include <WiFi.h>
+/*#include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h> 
 #include <ArduinoJson.h>
@@ -21,12 +21,12 @@ const char* password = "OrtIOTnew22$2";
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
-
+*/
 /***PINES***/
 #define BTN_OK 33
-#define LED_VERDE 13
+#define LED_VERDE 14
 #define LED_AMARILLO 12
-#define LED_ROJO 14
+#define LED_ROJO 13
 #define BUZZER 17
 int estado;
 
@@ -51,9 +51,9 @@ void setup() {
   pinMode(LED_AMARILLO, OUTPUT);
   pinMode(LED_ROJO, OUTPUT);
   pinMode(BUZZER, OUTPUT);
-  
+
   Serial.begin(9600);
-  while ( !Serial ) delay(100);   // wait for native usb
+  while (!Serial) delay(100);  // wait for native usb
   Serial.println(F("BMP280 Sensor event test"));
 
   unsigned status;
@@ -62,7 +62,8 @@ void setup() {
   if (!status) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
                      "try a different address!"));
-    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(), 16);
+    Serial.print("SensorID was: 0x");
+    Serial.println(bmp.sensorID(), 16);
     Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
     Serial.print("        ID of 0x60 represents a BME 280.\n");
@@ -80,7 +81,7 @@ void setup() {
   bmp_temp->printSensorDetails();
 
   // Connect to Wi-Fi
-  WiFi.mode(WIFI_STA);
+  /* WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
 
@@ -91,7 +92,7 @@ void setup() {
   }
   // Print ESP32 Local IP Address
   Serial.println(WiFi.localIP());
-  bot.sendMessage(CHAT_ID, "Bot Hola mundo", "");
+  bot.sendMessage(CHAT_ID, "Bot Hola mundo", "");*/
 }
 
 void loop() {
@@ -103,6 +104,7 @@ void loop() {
 
   switch (estado) {
     case VERDE:
+      Serial.println("Estado verde");
       digitalWrite(LED_VERDE, HIGH);
       digitalWrite(LED_AMARILLO, LOW);
       digitalWrite(LED_ROJO, LOW);
@@ -113,6 +115,7 @@ void loop() {
       break;
 
     case AMARILLO:
+      Serial.println("Estado amarillo");
       digitalWrite(LED_VERDE, LOW);
       digitalWrite(LED_AMARILLO, HIGH);
       digitalWrite(LED_ROJO, LOW);
@@ -126,11 +129,12 @@ void loop() {
       break;
 
     case ROJO:
+      Serial.println("Estado rojo");
       digitalWrite(LED_VERDE, LOW);
       digitalWrite(LED_AMARILLO, LOW);
       digitalWrite(LED_ROJO, HIGH);
       digitalWrite(BUZZER, HIGH);
-      bot.sendMessage(CHAT_ID, "La temperatura ha superado el umbral establecido", "");
+      //bot.sendMessage(CHAT_ID, "La temperatura ha superado el umbral establecido", "");
       if (estadoBtnOk == presionado) {
         estado = ROJO_SIN_BUZZER;
       }
@@ -140,6 +144,7 @@ void loop() {
       break;
 
     case ROJO_SIN_BUZZER:
+      Serial.println("Estado rojo sin buzzer");
       digitalWrite(LED_VERDE, LOW);
       digitalWrite(LED_AMARILLO, LOW);
       digitalWrite(LED_ROJO, HIGH);
