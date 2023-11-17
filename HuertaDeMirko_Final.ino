@@ -8,7 +8,7 @@ Adafruit_BMP280 bmp;  // use I2C interface
 Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
 Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
 
-//Telegram
+//Telegram --> Mirko: lo sacamos porque VOS NOS DIJISTE, como no usamos los nucleos todo es más lento, y poner telegram lo traba
 /*#include <WiFi.h>
   #include <WiFiClientSecure.h>
   #include <UniversalTelegramBot.h>
